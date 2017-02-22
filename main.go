@@ -18,7 +18,6 @@ import (
 var (
 	network = flag.String("net", "udp", "network to listen")
 	address = flag.String("addr", "0.0.0.0:3478", "address to listen")
-	workers = flag.Int("workers", 1, "workers to start")
 	profile = flag.Bool("profile", false, "profile")
 )
 
@@ -62,12 +61,8 @@ type Logger interface {
 
 var (
 	defaultLogger = logrus.New()
-	software      = &stun.Software{
-		[]byte(defaultName),
-	}
+	software      = stun.NewSoftware("ernado/stund")
 )
-
-const defaultName = "cydev/stun"
 
 func (s *Server) logger() Logger {
 	if s.Logger == nil {
@@ -87,11 +82,6 @@ func basicProcess(addr net.Addr, b []byte, req, res *stun.Message) error {
 	if _, err := req.Write(b); err != nil {
 		return errors.Wrap(err, "failed to read message")
 	}
-	res.TransactionID = req.TransactionID
-	res.Type = stun.MessageType{
-		Method: stun.MethodBinding,
-		Class:  stun.ClassSuccessResponse,
-	}
 	var (
 		ip   net.IP
 		port int
@@ -103,21 +93,23 @@ func basicProcess(addr net.Addr, b []byte, req, res *stun.Message) error {
 	default:
 		panic(fmt.Sprintf("unknown addr: %v", addr))
 	}
-	xma := &stun.XORMappedAddress{
-		IP:   ip,
-		Port: port,
-	}
-	xma.AddTo(res)
-	software.AddTo(res)
-	res.WriteHeader()
-	return nil
+	return res.Build(
+		stun.NewTransactionIDSetter(req.TransactionID),
+		stun.NewType(stun.MethodBinding, stun.ClassSuccessResponse),
+		software,
+		&stun.XORMappedAddress{
+			IP:   ip,
+			Port: port,
+		},
+		stun.Fingerprint,
+	)
 }
 
 func (s *Server) serveConn(c net.PacketConn, res, req *stun.Message) error {
 	if c == nil {
 		return nil
 	}
-	buf := make([]byte, stun.MaxPacketSize)
+	buf := make([]byte, 1024)
 	n, addr, err := c.ReadFrom(buf)
 	if err != nil {
 		s.logger().Printf("ReadFrom: %v", err)
@@ -164,9 +156,6 @@ func ListenUDPAndServe(serverNet, laddr string) error {
 	if err != nil {
 		return err
 	}
-	for i := 1; i < *workers; i++ {
-		go new(Server).Serve(c)
-	}
 	return new(Server).Serve(c)
 }
 
@@ -190,7 +179,7 @@ func main() {
 	switch *network {
 	case "udp":
 		normalized := normalize(*address)
-		fmt.Println("cydev/stun listening on", normalized, "via", *network)
+		fmt.Println("ernado/stund listening on", normalized, "via", *network)
 		log.Fatal(ListenUDPAndServe(*network, normalized))
 	default:
 		log.Fatal("unsupported network:", *network)
