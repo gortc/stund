@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/ernado/stun"
+	"github.com/go-rtc/stun"
 )
 
 func BenchmarkBasicProcess(b *testing.B) {

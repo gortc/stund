@@ -10,7 +10,7 @@ import (
 
 	_ "net/http/pprof"
 
-	"github.com/ernado/stun"
+	"github.com/go-rtc/stun"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )

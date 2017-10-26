@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  name = "github.com/ernado/stun"
+  name = "github.com/go-rtc/stun"
   packages = ["."]
   revision = "50e4ada60d85da7e5e81f1bc8b036d1a16de750f"
   version = "v1.5.1"
@@ -34,6 +34,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "426f4b9919be4d467b9188235365ec42d7062d1baee0138b86a925af301cec97"
+  inputs-digest = "dabbbad95c707cb5786c06ed2279d7cdd1ce1465394e1ca77faf8dccd5cfdbd8"
   solver-name = "gps-cdcl"
   solver-version = 1

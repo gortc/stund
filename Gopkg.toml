@@ -22,7 +22,7 @@
 
 
 [[constraint]]
-  name = "github.com/ernado/stun"
+  name = "github.com/go-rtc/stun"
   version = "1.5.1"
 
 [[constraint]]
