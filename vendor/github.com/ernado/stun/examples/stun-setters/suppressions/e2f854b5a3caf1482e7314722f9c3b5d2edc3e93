@@ -1,0 +1,5 @@
+panic: runtime error: index out of range
+github.com/go-rtc/stun.(*ErrorCodeAttribute).GetFrom
+github.com/go-rtc/stun.FuzzSetters
+go-fuzz-dep.Main
+main.main
