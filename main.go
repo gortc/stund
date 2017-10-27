@@ -26,31 +26,10 @@ var (
 // Current implementation is UDP only and not utilizes FINGERPRINT mechanism,
 // nor ALTERNATE-SERVER, nor credentials mechanisms. It does not support
 // backwards compatibility with RFC 3489.
-//
-// The STUN server MUST support the Binding method.  It SHOULD NOT
-// utilize the short-term or long-term credential mechanism.  This is
-// because the work involved in authenticating the request is more than
-// the work in simply processing it.  It SHOULD NOT utilize the
-// ALTERNATE-SERVER mechanism for the same reason.  It MUST support UDP
-// and TCP.  It MAY support STUN over TCP/TLS; however, TLS provides
-// minimal security benefits in this basic mode of operation.  It MAY
-// utilize the FINGERPRINT mechanism but MUST NOT require it.  Since the
-// stand-alone server only runs STUN, FINGERPRINT provides no benefit.
-// Requiring it would break compatibility with RFC 3489, and such
-// compatibility is desirable in a stand-alone server.  Stand-alone STUN
-// servers SHOULD support backwards compatibility with [RFC3489]
-// clients, as described in Section 12.
-//
-// It is RECOMMENDED that administrators of STUN servers provide DNS
-// entries for those servers as described in Section 9.
-//
-// A basic STUN server is not a solution for NAT traversal by itself.
-// However, it can be utilized as part of a solution through STUN
-// usages.  This is discussed further in Section 14.
 type Server struct {
 	Addr         string
-	Logger       Logger
 	LogAllErrors bool
+	log          Logger
 }
 
 // Logger is used for logging formatted messages.
@@ -60,18 +39,8 @@ type Logger interface {
 }
 
 var (
-	defaultLogger = logrus.New()
-	software      = stun.NewSoftware("ernado/stund")
-)
-
-func (s *Server) logger() Logger {
-	if s.Logger == nil {
-		return defaultLogger
-	}
-	return s.Logger
-}
-
-var (
+	defaultLogger     = logrus.New()
+	software          = stun.NewSoftware("gortc/stund")
 	errNotSTUNMessage = errors.New("not stun message")
 )
 
@@ -112,24 +81,24 @@ func (s *Server) serveConn(c net.PacketConn, res, req *stun.Message) error {
 	buf := make([]byte, 1024)
 	n, addr, err := c.ReadFrom(buf)
 	if err != nil {
-		s.logger().Printf("ReadFrom: %v", err)
+		s.log.Printf("ReadFrom: %v", err)
 		return nil
 	}
-	// s.logger().Printf("read %d bytes from %s", n, addr)
+	// s.log().Printf("read %d bytes from %s", n, addr)
 	if _, err = req.Write(buf[:n]); err != nil {
-		s.logger().Printf("Write: %v", err)
+		s.log.Printf("Write: %v", err)
 		return err
 	}
 	if err = basicProcess(addr, buf[:n], req, res); err != nil {
 		if err == errNotSTUNMessage {
 			return nil
 		}
-		s.logger().Printf("basicProcess: %v", err)
+		s.log.Printf("basicProcess: %v", err)
 		return nil
 	}
 	_, err = c.WriteTo(res.Raw, addr)
 	if err != nil {
-		s.logger().Printf("WriteTo: %v", err)
+		s.log.Printf("WriteTo: %v", err)
 	}
 	return err
 }
@@ -142,7 +111,7 @@ func (s *Server) Serve(c net.PacketConn) error {
 	)
 	for {
 		if err := s.serveConn(c, res, req); err != nil {
-			s.logger().Printf("serve: %v", err)
+			s.log.Printf("serve: %v", err)
 			return err
 		}
 		res.Reset()
@@ -156,7 +125,10 @@ func ListenUDPAndServe(serverNet, laddr string) error {
 	if err != nil {
 		return err
 	}
-	return new(Server).Serve(c)
+	s := &Server{
+		log: defaultLogger,
+	}
+	return s.Serve(c)
 }
 
 func normalize(address string) string {
@@ -179,9 +151,9 @@ func main() {
 	switch *network {
 	case "udp":
 		normalized := normalize(*address)
-		fmt.Println("ernado/stund listening on", normalized, "via", *network)
+		fmt.Println("gortc/stund listening on", normalized, "via", *network)
 		log.Fatal(ListenUDPAndServe(*network, normalized))
 	default:
-		log.Fatal("unsupported network:", *network)
+		log.Fatalln("unsupported network:", *network)
 	}
 }
