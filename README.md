@@ -1,3 +1,3 @@
 # stund
 
-Simple stun server based on [go-rtc/stun](https://github.com/go-rtc/stun).
+Basic stun server based on [gortc/stun](https://github.com/gortc/stun).
