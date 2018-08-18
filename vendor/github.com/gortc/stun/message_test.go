@@ -449,6 +449,24 @@ func TestMessage_Equal(t *testing.T) {
 			t.Error("should equal")
 		}
 	})
+	t.Run("Attributes length", func(t *testing.T) {
+		attr := RawAttribute{Length: 2, Value: []byte{0x1, 0x2}, Type: 0x1}
+		attr1 := RawAttribute{Length: 2, Value: []byte{0x1, 0x2}, Type: 0x1}
+		a := &Message{Attributes: Attributes{attr}, Length: 4 + 2}
+		b := &Message{Attributes: Attributes{attr, attr1}, Length: 4 + 2}
+		if a.Equal(b) {
+			t.Error("should not equal")
+		}
+	})
+	t.Run("Attributes values", func(t *testing.T) {
+		attr := RawAttribute{Length: 2, Value: []byte{0x1, 0x2}, Type: 0x1}
+		attr1 := RawAttribute{Length: 2, Value: []byte{0x1, 0x1}, Type: 0x1}
+		a := &Message{Attributes: Attributes{attr, attr}, Length: 4 + 2}
+		b := &Message{Attributes: Attributes{attr, attr1}, Length: 4 + 2}
+		if a.Equal(b) {
+			t.Error("should not equal")
+		}
+	})
 }
 
 func TestMessageGrow(t *testing.T) {
@@ -639,6 +657,7 @@ func BenchmarkMessage_WriteHeader(b *testing.B) {
 			Method: MethodBinding,
 		},
 	}
+	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		m.WriteHeader()
 	}
@@ -705,14 +724,10 @@ func ExampleMessage() {
 	}
 	fmt.Println("for corrupted message:")
 	decoded.Raw[22] = 33
-	fmt.Println("fingerprint:", Fingerprint.Check(decoded))
-	iErr, ok := i.Check(decoded).(*IntegrityErr)
-	if ok {
-		fmt.Println("integrity check failed")
-		fmt.Printf("got:  %x\n", iErr.Actual)
-		fmt.Printf("want: %x\n", iErr.Expected)
+	if Fingerprint.Check(decoded) == nil {
+		fmt.Println("fingerprint: ok")
 	} else {
-		fmt.Println("assertion failed")
+		fmt.Println("fingerprint: failed")
 	}
 
 	// Output:
@@ -724,10 +739,7 @@ func ExampleMessage() {
 	// fingerprint is correct
 	// integrity ok
 	// for corrupted message:
-	// fingerprint: CRC mismatch: b36d2c38 (expected) != 8ef13141 (actual)
-	// integrity check failed
-	// got:  06f0692c159f4256c14b9442927889e341256ac2
-	// want: c1105962efee5c96f4f194cc91b4eb8ab7667c7a
+	// fingerprint: failed
 }
 
 func TestAllocations(t *testing.T) {
@@ -813,7 +825,7 @@ func TestMessageFullSize(t *testing.T) {
 		NewTransactionIDSetter([TransactionIDSize]byte{
 			1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1,
 		}),
-		NewSoftware("ernado/stun"),
+		NewSoftware("gortc/stun"),
 		NewLongTermIntegrity("username", "realm", "password"),
 		Fingerprint,
 	); err != nil {
@@ -825,5 +837,155 @@ func TestMessageFullSize(t *testing.T) {
 	decoder.Raw = m.Raw[:len(m.Raw)-10]
 	if err := decoder.Decode(); err == nil {
 		t.Error("decode on truncated buffer should error")
+	}
+}
+
+func TestMessage_CloneTo(t *testing.T) {
+	m := new(Message)
+	if err := m.Build(BindingRequest,
+		NewTransactionIDSetter([TransactionIDSize]byte{
+			1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1,
+		}),
+		NewSoftware("gortc/stun"),
+		NewLongTermIntegrity("username", "realm", "password"),
+		Fingerprint,
+	); err != nil {
+		t.Fatal(err)
+	}
+	m.Encode()
+	b := new(Message)
+	if err := m.CloneTo(b); err != nil {
+		t.Fatal(err)
+	}
+	if !b.Equal(m) {
+		t.Fatal("not equal")
+	}
+	// Corrupting m and checking that b is not corrupted.
+	s, ok := b.Attributes.Get(AttrSoftware)
+	if !ok {
+		t.Fatal("no software attribute")
+	}
+	s.Value[0] = 'k'
+	if b.Equal(m) {
+		t.Fatal("should not be equal")
+	}
+}
+
+func BenchmarkMessage_CloneTo(b *testing.B) {
+	b.ReportAllocs()
+	m := new(Message)
+	if err := m.Build(BindingRequest,
+		NewTransactionIDSetter([TransactionIDSize]byte{
+			1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1,
+		}),
+		NewSoftware("gortc/stun"),
+		NewLongTermIntegrity("username", "realm", "password"),
+		Fingerprint,
+	); err != nil {
+		b.Fatal(err)
+	}
+	b.SetBytes(int64(len(m.Raw)))
+	a := new(Message)
+	m.CloneTo(a)
+	for i := 0; i < b.N; i++ {
+		if err := m.CloneTo(a); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func TestMessage_AddTo(t *testing.T) {
+	m := new(Message)
+	if err := m.Build(BindingRequest,
+		NewTransactionIDSetter([TransactionIDSize]byte{
+			1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1,
+		}),
+		Fingerprint,
+	); err != nil {
+		t.Fatal(err)
+	}
+	m.Encode()
+	b := new(Message)
+	if err := m.CloneTo(b); err != nil {
+		t.Fatal(err)
+	}
+	m.TransactionID = [TransactionIDSize]byte{
+		1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 2,
+	}
+	if b.Equal(m) {
+		t.Fatal("should not be equal")
+	}
+	m.AddTo(b)
+	if !b.Equal(m) {
+		t.Fatal("should be equal")
+	}
+}
+
+func BenchmarkMessage_AddTo(b *testing.B) {
+	b.ReportAllocs()
+	m := new(Message)
+	if err := m.Build(BindingRequest,
+		NewTransactionIDSetter([TransactionIDSize]byte{
+			1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1,
+		}),
+		Fingerprint,
+	); err != nil {
+		b.Fatal(err)
+	}
+	a := new(Message)
+	m.CloneTo(a)
+	for i := 0; i < b.N; i++ {
+		if err := m.AddTo(a); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func TestDecode(t *testing.T) {
+	t.Run("Nil", func(t *testing.T) {
+		if err := Decode(nil, nil); err != ErrDecodeToNil {
+			t.Errorf("unexpected error: %v", err)
+		}
+	})
+	m := New()
+	m.Type = MessageType{Method: MethodBinding, Class: ClassRequest}
+	m.TransactionID = NewTransactionID()
+	m.Add(AttrErrorCode, []byte{0xff, 0xfe, 0xfa})
+	m.WriteHeader()
+	mDecoded := New()
+	if err := Decode(m.Raw, mDecoded); err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if !mDecoded.Equal(m) {
+		t.Error("decoded result is not equal to encoded message")
+	}
+	t.Run("ZeroAlloc", func(t *testing.T) {
+		allocs := testing.AllocsPerRun(10, func() {
+			mDecoded.Reset()
+			if err := Decode(m.Raw, mDecoded); err != nil {
+				t.Error(err)
+			}
+		})
+		if allocs > 0 {
+			t.Error("unexpected allocations")
+		}
+	})
+}
+
+func BenchmarkDecode(b *testing.B) {
+	m := New()
+	m.Type = MessageType{Method: MethodBinding, Class: ClassRequest}
+	m.TransactionID = NewTransactionID()
+	m.Add(AttrErrorCode, []byte{0xff, 0xfe, 0xfa})
+	m.WriteHeader()
+	mDecoded := New()
+
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		mDecoded.Reset()
+		if err := Decode(m.Raw, mDecoded); err != nil {
+			b.Fatal(err)
+		}
 	}
 }

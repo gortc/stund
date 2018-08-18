@@ -8,7 +8,7 @@ import (
 
 // ErrorCodeAttribute represents ERROR-CODE attribute.
 //
-// https://tools.ietf.org/html/rfc5389#section-15.6
+// RFC 5389 Section 15.6
 type ErrorCodeAttribute struct {
 	Code   ErrorCode
 	Reason []byte
@@ -30,12 +30,11 @@ const (
 // AddTo adds ERROR-CODE to m.
 func (c ErrorCodeAttribute) AddTo(m *Message) error {
 	value := make([]byte, 0, errorCodeReasonMaxB)
-	if len(c.Reason) > errorCodeReasonMaxB {
-		return &AttrOverflowErr{
-			Got:  len(c.Reason) + errorCodeReasonStart,
-			Max:  errorCodeReasonMaxB + errorCodeReasonStart,
-			Type: AttrErrorCode,
-		}
+	if err := CheckOverflow(AttrErrorCode,
+		len(c.Reason)+errorCodeReasonStart,
+		errorCodeReasonMaxB+errorCodeReasonStart,
+	); err != nil {
+		return err
 	}
 	value = value[:errorCodeReasonStart+len(c.Reason)]
 	number := byte(c.Code % errorCodeModulo) // error code modulo 100
@@ -93,14 +92,14 @@ const (
 	CodeBadRequest       ErrorCode = 400
 	CodeUnauthorised     ErrorCode = 401
 	CodeUnknownAttribute ErrorCode = 420
-	CodeStaleNonce       ErrorCode = 428
+	CodeStaleNonce       ErrorCode = 438
 	CodeRoleConflict     ErrorCode = 478
 	CodeServerError      ErrorCode = 500
 )
 
 // Error codes from RFC 5766.
 //
-// https://trac.tools.ietf.org/html/rfc5766#section-15
+// RFC 5766 Section 15
 const (
 	CodeForbidden             ErrorCode = 403 // Forbidden
 	CodeAllocMismatch         ErrorCode = 437 // Allocation Mismatch
@@ -108,6 +107,14 @@ const (
 	CodeUnsupportedTransProto ErrorCode = 442 // Unsupported Transport Protocol
 	CodeAllocQuotaReached     ErrorCode = 486 // Allocation Quota Reached
 	CodeInsufficientCapacity  ErrorCode = 508 // Insufficient Capacity
+)
+
+// Error codes from RFC 6156.
+//
+// RFC 6156 Section 10.2
+const (
+	CodeAddrFamilyNotSupported ErrorCode = 440 // Address Family not Supported
+	CodePeerAddrFamilyMismatch ErrorCode = 443 // Peer Address Family Mismatch
 )
 
 var errorReasons = map[ErrorCode][]byte{
@@ -126,4 +133,8 @@ var errorReasons = map[ErrorCode][]byte{
 	CodeUnsupportedTransProto: []byte("Unsupported Transport Protocol"),
 	CodeAllocQuotaReached:     []byte("Allocation Quota Reached"),
 	CodeInsufficientCapacity:  []byte("Insufficient Capacity"),
+
+	// RFC 6156.
+	CodeAddrFamilyNotSupported: []byte("Address Family not Supported"),
+	CodePeerAddrFamilyMismatch: []byte("Peer Address Family Mismatch"),
 }

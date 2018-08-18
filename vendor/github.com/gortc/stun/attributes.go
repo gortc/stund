@@ -24,6 +24,16 @@ func (a Attributes) Get(t AttrType) (RawAttribute, bool) {
 // AttrType is attribute type.
 type AttrType uint16
 
+// Required returns true if type is from comprehension-required range (0x0000-0x7FFF).
+func (t AttrType) Required() bool {
+	return t <= 0x7FFF
+}
+
+// Optional returns true if type is from comprehension-optional range (0x8000-0xFFFF).
+func (t AttrType) Optional() bool {
+	return t >= 0x8000
+}
+
 // Attributes from comprehension-required range (0x0000-0x7FFF).
 const (
 	AttrMappedAddress     AttrType = 0x0001 // MAPPED-ADDRESS
@@ -64,6 +74,11 @@ const (
 	AttrReservationToken   AttrType = 0x0022 // RESERVATION-TOKEN
 )
 
+// Attributes from RFC 6156 TURN IPv6.
+const (
+	AttrRequestedAddressFamily AttrType = 0x0017 // REQUESTED-ADDRESS-FAMILY
+)
+
 // Attributes from An Origin Attribute for the STUN Protocol.
 const (
 	AttrOrigin AttrType = 0x802F
@@ -75,31 +90,32 @@ func (t AttrType) Value() uint16 {
 }
 
 var attrNames = map[AttrType]string{
-	AttrMappedAddress:      "MAPPED-ADDRESS",
-	AttrUsername:           "USERNAME",
-	AttrErrorCode:          "ERROR-CODE",
-	AttrMessageIntegrity:   "MESSAGE-INTEGRITY",
-	AttrUnknownAttributes:  "UNKNOWN-ATTRIBUTES",
-	AttrRealm:              "REALM",
-	AttrNonce:              "NONCE",
-	AttrXORMappedAddress:   "XOR-MAPPED-ADDRESS",
-	AttrSoftware:           "SOFTWARE",
-	AttrAlternateServer:    "ALTERNATE-SERVER",
-	AttrFingerprint:        "FINGERPRINT",
-	AttrPriority:           "PRIORITY",
-	AttrUseCandidate:       "USE-CANDIDATE",
-	AttrICEControlled:      "ICE-CONTROLLED",
-	AttrICEControlling:     "ICE-CONTROLLING",
-	AttrChannelNumber:      "CHANNEL-NUMBER",
-	AttrLifetime:           "LIFETIME",
-	AttrXORPeerAddress:     "XOR-PEER-ADDRESS",
-	AttrData:               "DATA",
-	AttrXORRelayedAddress:  "XOR-RELAYED-ADDRESS",
-	AttrEvenPort:           "EVEN-PORT",
-	AttrRequestedTransport: "REQUESTED-TRANSPORT",
-	AttrDontFragment:       "DONT-FRAGMENT",
-	AttrReservationToken:   "RESERVATION-TOKEN",
-	AttrOrigin:             "ORIGIN",
+	AttrMappedAddress:          "MAPPED-ADDRESS",
+	AttrUsername:               "USERNAME",
+	AttrErrorCode:              "ERROR-CODE",
+	AttrMessageIntegrity:       "MESSAGE-INTEGRITY",
+	AttrUnknownAttributes:      "UNKNOWN-ATTRIBUTES",
+	AttrRealm:                  "REALM",
+	AttrNonce:                  "NONCE",
+	AttrXORMappedAddress:       "XOR-MAPPED-ADDRESS",
+	AttrSoftware:               "SOFTWARE",
+	AttrAlternateServer:        "ALTERNATE-SERVER",
+	AttrFingerprint:            "FINGERPRINT",
+	AttrPriority:               "PRIORITY",
+	AttrUseCandidate:           "USE-CANDIDATE",
+	AttrICEControlled:          "ICE-CONTROLLED",
+	AttrICEControlling:         "ICE-CONTROLLING",
+	AttrChannelNumber:          "CHANNEL-NUMBER",
+	AttrLifetime:               "LIFETIME",
+	AttrXORPeerAddress:         "XOR-PEER-ADDRESS",
+	AttrData:                   "DATA",
+	AttrXORRelayedAddress:      "XOR-RELAYED-ADDRESS",
+	AttrEvenPort:               "EVEN-PORT",
+	AttrRequestedTransport:     "REQUESTED-TRANSPORT",
+	AttrDontFragment:           "DONT-FRAGMENT",
+	AttrReservationToken:       "RESERVATION-TOKEN",
+	AttrRequestedAddressFamily: "REQUESTED-ADDRESS-FAMILY",
+	AttrOrigin:                 "ORIGIN",
 }
 
 func (t AttrType) String() string {
@@ -160,34 +176,6 @@ func (m *Message) Get(t AttrType) ([]byte, error) {
 		return nil, ErrAttributeNotFound
 	}
 	return v.Value, nil
-}
-
-// AttrOverflowErr occurs when len(v) > Max.
-type AttrOverflowErr struct {
-	Type AttrType
-	Max  int
-	Got  int
-}
-
-func (e AttrOverflowErr) Error() string {
-	return fmt.Sprintf("incorrect length of %s attribute: %d exceeds maximum %d",
-		e.Type, e.Got, e.Max,
-	)
-}
-
-// AttrLengthErr means that length for attribute is invalid.
-type AttrLengthErr struct {
-	Attr     AttrType
-	Got      int
-	Expected int
-}
-
-func (e AttrLengthErr) Error() string {
-	return fmt.Sprintf("incorrect length of %s attribute: got %d, expected %d",
-		e.Attr,
-		e.Got,
-		e.Expected,
-	)
 }
 
 // STUN aligns attributes on 32-bit boundaries, attributes whose content

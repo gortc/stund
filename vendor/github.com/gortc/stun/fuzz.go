@@ -93,6 +93,8 @@ func FuzzSetters(data []byte) int {
 		{new(ErrorCodeAttribute), AttrErrorCode},
 		{new(UnknownAttributes), AttrUnknownAttributes},
 		{new(Username), AttrUsername},
+		{new(MappedAddress), AttrMappedAddress},
+		{new(Realm), AttrRealm},
 	}
 	var firstByte = byte(0)
 	if len(data) > 0 {
@@ -118,8 +120,7 @@ func FuzzSetters(data []byte) int {
 		// We allow decoding some text attributes
 		// when their length is too big, but
 		// not encoding.
-		_, ok := err.(*AttrOverflowErr)
-		if !ok {
+		if !IsAttrSizeOverflow(err) {
 			panic(err)
 		}
 		return 1

@@ -21,9 +21,12 @@ func TestMessageCrash2(t *testing.T) {
 
 func corpus(t *testing.T, function, typ string) [][]byte {
 	var data [][]byte
-	p := filepath.Join("examples", function, typ)
+	p := filepath.Join("fuzz", function, typ)
 	f, err := os.Open(p)
 	if err != nil {
+		if os.IsNotExist(err) {
+			t.Skip("does not exist")
+		}
 		t.Fatal(err)
 	}
 	list, err := f.Readdir(-1)

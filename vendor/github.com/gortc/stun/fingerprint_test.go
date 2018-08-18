@@ -34,8 +34,8 @@ func TestFingerprint_Check(t *testing.T) {
 		t.Error(err)
 	}
 	m.Raw[3] = m.Raw[3] + 1
-	if err, ok := Fingerprint.Check(m).(*CRCMismatch); !ok {
-		t.Error(err, "should be *CRCMissmatch")
+	if err := Fingerprint.Check(m); err == nil {
+		t.Error("should error")
 	}
 }
 
@@ -47,8 +47,8 @@ func TestFingerprint_CheckBad(t *testing.T) {
 		t.Error("should error")
 	}
 	m.Add(AttrFingerprint, []byte{1, 2, 3})
-	if err := Fingerprint.Check(m); err == nil {
-		t.Error("should error")
+	if !IsAttrSizeInvalid(Fingerprint.Check(m)) {
+		t.Error("IsAttrSizeInvalid should be true")
 	}
 }
 

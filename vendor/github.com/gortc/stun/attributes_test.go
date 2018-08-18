@@ -12,6 +12,15 @@ func BenchmarkMessage_GetNotFound(b *testing.B) {
 	}
 }
 
+func BenchmarkMessage_Get(b *testing.B) {
+	m := New()
+	m.Add(AttrUsername, []byte{1, 2, 3, 4, 5, 6, 7})
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		m.Get(AttrUsername)
+	}
+}
+
 func TestMessage_GetNoAllocs(t *testing.T) {
 	m := New()
 	NewSoftware("c").AddTo(m)
@@ -60,24 +69,29 @@ func TestPadding(t *testing.T) {
 	}
 }
 
-func TestAttrLengthError_Error(t *testing.T) {
-	err := AttrOverflowErr{
-		Got:  100,
-		Max:  50,
-		Type: AttrLifetime,
+func TestAttrTypeRange(t *testing.T) {
+	for _, a := range []AttrType{
+		AttrPriority,
+		AttrErrorCode,
+		AttrUseCandidate,
+		AttrEvenPort,
+		AttrRequestedAddressFamily,
+	} {
+		t.Run(a.String(), func(t *testing.T) {
+			if a.Optional() || !a.Required() {
+				t.Error("should be required")
+			}
+		})
 	}
-	if err.Error() != "incorrect length of LIFETIME attribute: 100 exceeds maximum 50" {
-		t.Error("bad error string", err)
-	}
-}
-
-func TestAttrLengthErr_Error(t *testing.T) {
-	err := AttrLengthErr{
-		Attr:     AttrErrorCode,
-		Expected: 15,
-		Got:      99,
-	}
-	if err.Error() != "incorrect length of ERROR-CODE attribute: got 99, expected 15" {
-		t.Errorf("bad error string: %s", err)
+	for _, a := range []AttrType{
+		AttrSoftware,
+		AttrICEControlled,
+		AttrOrigin,
+	} {
+		t.Run(a.String(), func(t *testing.T) {
+			if a.Required() || !a.Optional() {
+				t.Error("should be optional")
+			}
+		})
 	}
 }

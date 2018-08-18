@@ -2,38 +2,58 @@
 
 
 [[projects]]
+  digest = "1:14c132a7bba8c9e5ae68a7a0a0e850d3181cbc10ef565b556c98ea94eff297d9"
   name = "github.com/gortc/stun"
-  packages = ["."]
-  revision = "50e4ada60d85da7e5e81f1bc8b036d1a16de750f"
-  version = "v1.5.1"
+  packages = [
+    ".",
+    "internal/hmac",
+  ]
+  pruneopts = ""
+  revision = "382848e43da1af4a877b8e1c9374073168749f27"
+  version = "v1.17.2"
 
 [[projects]]
+  digest = "1:7365acd48986e205ccb8652cc746f09c8b7876030d53710ea6ef7d0bd0dcd7ca"
   name = "github.com/pkg/errors"
   packages = ["."]
+  pruneopts = ""
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
 [[projects]]
+  digest = "1:3fcbf733a8d810a21265a7f2fe08a3353db2407da052b233f8b204b5afc03d9b"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
-  revision = "f006c2ac4710855cf0f916dd6b77acf6b048dc6e"
-  version = "v1.0.3"
+  pruneopts = ""
+  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
+  version = "v1.0.6"
 
 [[projects]]
   branch = "master"
+  digest = "1:97fb4f02b231deef44704b6fa74d31e46f669fb217f192754ba603c2b32a190b"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "2509b142fb2b797aa7587dad548f113b2c0f20ce"
+  pruneopts = ""
+  revision = "aabede6cba87e37f413b3e60ebfc214f8eeca1b0"
 
 [[projects]]
   branch = "master"
+  digest = "1:1132cbdac95d6a2a30f7434f7190b3b1345e85b6071e74911b1dce3e19e1543d"
   name = "golang.org/x/sys"
-  packages = ["unix","windows"]
-  revision = "3e3646d2c706c21b222a5dbcaa6db12b3e0cc765"
+  packages = [
+    "unix",
+    "windows",
+  ]
+  pruneopts = ""
+  revision = "1c9583448a9c3aa0f9a6a5241bf73c0bd8aafded"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "045cb2c77a3abc0808c44cce1210c59b0b79dbb43b2d17fd97c0b78524104a81"
+  input-imports = [
+    "github.com/gortc/stun",
+    "github.com/pkg/errors",
+    "github.com/sirupsen/logrus",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

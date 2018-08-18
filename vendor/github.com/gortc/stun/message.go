@@ -47,6 +47,18 @@ func New() *Message {
 	}
 }
 
+// ErrDecodeToNil occurs on Decode(data, nil) call.
+var ErrDecodeToNil = errors.New("attempt to decode to nil message")
+
+// Decode decodes Message from data to m, returning error if any.
+func Decode(data []byte, m *Message) error {
+	if m == nil {
+		return ErrDecodeToNil
+	}
+	m.Raw = append(m.Raw[:0], data...)
+	return m.Decode()
+}
+
 // Message represents a single STUN packet. It uses aggressive internal
 // buffering to enable zero-allocation encoding and decoding,
 // so there are some usage constraints:
@@ -59,6 +71,15 @@ type Message struct {
 	TransactionID [TransactionIDSize]byte
 	Attributes    Attributes
 	Raw           []byte
+}
+
+// AddTo sets b.TransactionID to m.TransactionID.
+//
+// Implements Setter to aid in crafting responses.
+func (m *Message) AddTo(b *Message) error {
+	b.TransactionID = m.TransactionID
+	b.WriteTransactionID()
+	return nil
 }
 
 // NewTransactionID sets m.TransactionID to random value from crypto/rand
@@ -155,6 +176,25 @@ func (m *Message) Add(t AttrType, v []byte) {
 	m.WriteLength()
 }
 
+func attrSliceEqual(a, b Attributes) bool {
+	for _, attr := range a {
+		found := false
+		for _, attrB := range b {
+			if attrB.Type != attr.Type {
+				continue
+			}
+			if attrB.Equal(attr) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
 func attrEqual(a, b Attributes) bool {
 	if a == nil && b == nil {
 		return true
@@ -162,14 +202,14 @@ func attrEqual(a, b Attributes) bool {
 	if a == nil || b == nil {
 		return false
 	}
-	for _, attr := range a {
-		attrB, ok := b.Get(attr.Type)
-		if !ok {
-			return false
-		}
-		if !attrB.Equal(attr) {
-			return false
-		}
+	if len(a) != len(b) {
+		return false
+	}
+	if !attrSliceEqual(a, b) {
+		return false
+	}
+	if !attrSliceEqual(b, a) {
+		return false
 	}
 	return true
 }
@@ -226,9 +266,12 @@ func (m *Message) WriteTransactionID() {
 
 // WriteAttributes encodes all m.Attributes to m.
 func (m *Message) WriteAttributes() {
-	for _, a := range m.Attributes {
+	attributes := m.Attributes
+	m.Attributes = attributes[:0]
+	for _, a := range attributes {
 		m.Add(a.Type, a.Value)
 	}
+	m.Attributes = attributes
 }
 
 // WriteType writes m.Type to m.Raw.
@@ -242,10 +285,11 @@ func (m *Message) SetType(t MessageType) {
 	m.WriteType()
 }
 
-// Encode resets m.Raw and calls WriteHeader and WriteAttributes.
+// Encode re-encodes message into m.Raw.
 func (m *Message) Encode() {
 	m.Raw = m.Raw[:0]
 	m.WriteHeader()
+	m.Length = 0
 	m.WriteAttributes()
 }
 
@@ -356,6 +400,13 @@ func (m *Message) Decode() error {
 func (m *Message) Write(tBuf []byte) (int, error) {
 	m.Raw = append(m.Raw[:0], tBuf...)
 	return len(tBuf), m.Decode()
+}
+
+// CloneTo clones m to b securing any further m mutations.
+func (m *Message) CloneTo(b *Message) error {
+	// TODO(ar): implement low-level copy.
+	b.Raw = append(b.Raw[:0], m.Raw...)
+	return b.Decode()
 }
 
 // MessageClass is 8-bit representation of 2-bit class of STUN Message Class.

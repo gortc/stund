@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
-	"github.com/go-rtc/stun"
+	"github.com/gortc/stun"
 )
 
 func main() {
@@ -18,16 +17,13 @@ func main() {
 	flag.Parse()
 	addr := flag.Arg(0)
 	if len(addr) == 0 {
-		fmt.Fprintln(os.Stderr, "no address specified")
-		flag.Usage()
-		os.Exit(2)
+		addr = "stun.l.google.com:19302"
 	}
 	c, err := stun.Dial("udp", addr)
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
-	deadline := time.Now().Add(time.Second * 5)
-	if err := c.Do(stun.MustBuild(stun.TransactionID, stun.BindingRequest), deadline, func(res stun.AgentEvent) {
+	if err := c.Do(stun.MustBuild(stun.TransactionID, stun.BindingRequest), func(res stun.Event) {
 		if res.Error != nil {
 			log.Fatalln(err)
 		}

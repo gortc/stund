@@ -1,24 +1,17 @@
 language: go
 
+sudo: false
+
+os:
+  - linux
+
 go:
-  - 1.8
-  - 1.9.1
-  
-env:
-  - TEST_EXTERNAL=1
+  - stable
 
-matrix:
-  allow_failures:
-    - go: tip
-  fast_finish: true  
-
-before_install:
-  - go get github.com/mattn/goveralls
-  - go get golang.org/x/tools/cmd/cover
-
-install:
- - go get -v -t .
+install: true
 
 script:
- - go test -tags gofuzz -run TestFuzz -v .
- - $HOME/gopath/bin/goveralls -service=travis-ci -v -package .
+  - make test
+
+after_success:
+ - bash <(curl -s https://codecov.io/bash)

@@ -38,7 +38,7 @@ func TestSoftware_GetFrom(t *testing.T) {
 func TestSoftware_AddTo_Invalid(t *testing.T) {
 	m := New()
 	s := make(Software, 1024)
-	if err, ok := s.AddTo(m).(*AttrOverflowErr); !ok {
+	if err := s.AddTo(m); !IsAttrSizeOverflow(err) {
 		t.Errorf("AddTo should return *AttrOverflowErr, got: %v", err)
 	}
 	if err := s.GetFrom(m); err != ErrAttributeNotFound {
@@ -71,8 +71,9 @@ func BenchmarkUsername_GetFrom(b *testing.B) {
 	b.ReportAllocs()
 	m := new(Message)
 	Username("test").AddTo(m)
+	var u Username
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		var u Username
 		if err := u.GetFrom(m); err != nil {
 			b.Fatal(err)
 		}
@@ -87,8 +88,8 @@ func TestUsername(t *testing.T) {
 	m.WriteHeader()
 	t.Run("Bad length", func(t *testing.T) {
 		badU := make(Username, 600)
-		if err, ok := badU.AddTo(m).(*AttrOverflowErr); !ok {
-			t.Errorf("expected length error, got %v", err)
+		if err := badU.AddTo(m); !IsAttrSizeOverflow(err) {
+			t.Errorf("AddTo should return *AttrOverflowErr, got: %v", err)
 		}
 	})
 	t.Run("AddTo", func(t *testing.T) {
@@ -163,7 +164,7 @@ func TestRealm_GetFrom(t *testing.T) {
 func TestRealm_AddTo_Invalid(t *testing.T) {
 	m := New()
 	r := make(Realm, 1024)
-	if err, ok := r.AddTo(m).(*AttrOverflowErr); !ok || err.Type != AttrRealm {
+	if err := r.AddTo(m); !IsAttrSizeOverflow(err) {
 		t.Errorf("AddTo should return *AttrOverflowErr, got: %v", err)
 	}
 	if err := r.GetFrom(m); err != ErrAttributeNotFound {
@@ -204,7 +205,7 @@ func TestNonce_GetFrom(t *testing.T) {
 func TestNonce_AddTo_Invalid(t *testing.T) {
 	m := New()
 	n := make(Nonce, 1024)
-	if err, ok := n.AddTo(m).(*AttrOverflowErr); !ok || err.Type != AttrNonce {
+	if err := n.AddTo(m); !IsAttrSizeOverflow(err) {
 		t.Errorf("AddTo should return *AttrOverflowErr, got: %v", err)
 	}
 	if err := n.GetFrom(m); err != ErrAttributeNotFound {
