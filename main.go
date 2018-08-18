@@ -62,9 +62,8 @@ func basicProcess(addr net.Addr, b []byte, req, res *stun.Message) error {
 	default:
 		panic(fmt.Sprintf("unknown addr: %v", addr))
 	}
-	return res.Build(
-		stun.NewTransactionIDSetter(req.TransactionID),
-		stun.NewType(stun.MethodBinding, stun.ClassSuccessResponse),
+	return res.Build(req,
+		stun.BindingSuccess,
 		software,
 		&stun.XORMappedAddress{
 			IP:   ip,
