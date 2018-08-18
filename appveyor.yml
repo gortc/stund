@@ -12,12 +12,11 @@ clone_folder: c:\gopath\src\github.com\gortc\stun
 
 environment:
   GOPATH: c:\gopath
-  GOVERSION: 1.9.2
+  GOVERSION: 1.10
   TEST_EXTERNAL: 1
 
 install:
   - go version
-  - go get -v -t .
 
 build_script:
-  - go test -v .
+  - go build
