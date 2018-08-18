@@ -2,49 +2,49 @@
 
 
 [[projects]]
-  digest = "1:14c132a7bba8c9e5ae68a7a0a0e850d3181cbc10ef565b556c98ea94eff297d9"
+  digest = "1:9eea710c689d8779906c7c8be68450fe547b2c035901277e4f806a7a0b8dad73"
   name = "github.com/gortc/stun"
   packages = [
     ".",
     "internal/hmac",
   ]
-  pruneopts = ""
+  pruneopts = "UT"
   revision = "382848e43da1af4a877b8e1c9374073168749f27"
   version = "v1.17.2"
 
 [[projects]]
-  digest = "1:7365acd48986e205ccb8652cc746f09c8b7876030d53710ea6ef7d0bd0dcd7ca"
+  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
   name = "github.com/pkg/errors"
   packages = ["."]
-  pruneopts = ""
+  pruneopts = "UT"
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
 [[projects]]
-  digest = "1:3fcbf733a8d810a21265a7f2fe08a3353db2407da052b233f8b204b5afc03d9b"
+  digest = "1:d867dfa6751c8d7a435821ad3b736310c2ed68945d05b50fb9d23aee0540c8cc"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
-  pruneopts = ""
+  pruneopts = "UT"
   revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
   version = "v1.0.6"
 
 [[projects]]
   branch = "master"
-  digest = "1:97fb4f02b231deef44704b6fa74d31e46f669fb217f192754ba603c2b32a190b"
+  digest = "1:3f3a05ae0b95893d90b9b3b5afdb79a9b3d96e4e36e099d841ae602e4aca0da8"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  pruneopts = ""
+  pruneopts = "UT"
   revision = "aabede6cba87e37f413b3e60ebfc214f8eeca1b0"
 
 [[projects]]
   branch = "master"
-  digest = "1:1132cbdac95d6a2a30f7434f7190b3b1345e85b6071e74911b1dce3e19e1543d"
+  digest = "1:2f71657f09ff05e4567909e9e0de7ad799828c96d402c540b41dc044a6590fb2"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
-  pruneopts = ""
+  pruneopts = "UT"
   revision = "1c9583448a9c3aa0f9a6a5241bf73c0bd8aafded"
 
 [solve-meta]
