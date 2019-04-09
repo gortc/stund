@@ -8,15 +8,15 @@ branches:
 
 skip_tags: true
 
-clone_folder: c:\gopath\src\github.com\gortc\stun
+clone_folder: c:\gopath\src\github.com\gortc\stund
 
 environment:
   GOPATH: c:\gopath
-  GOVERSION: 1.10
-  TEST_EXTERNAL: 1
+  GOVERSION: 1.12
 
 install:
   - go version
+  - go get -v -t .
 
 build_script:
-  - go build
+  - go test -v .
