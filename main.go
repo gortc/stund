@@ -6,13 +6,13 @@ import (
 	"log"
 	"net"
 	"net/http"
+	_ "net/http/pprof"
 	"strings"
 
-	_ "net/http/pprof"
-
-	"github.com/gortc/stun"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+
+	"gortc.io/stun/v2"
 )
 
 var (
