@@ -1,4 +1,4 @@
-module github.com/gortc/stund
+module github.com/gabrielbo1/stund
 
 require (
 	github.com/pkg/errors v0.8.1
