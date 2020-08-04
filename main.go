@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/gortc/stund/config"
 	"log"
 	"net"
 	"net/http"
@@ -17,7 +18,7 @@ import (
 
 var (
 	network = flag.String("net", "udp", "network to listen")
-	address = flag.String("addr", "0.0.0.0:3478", "address to listen")
+	address = flag.String("addr", config.EnvironmentVariableValue(config.ListenAddres)+":"+config.EnvironmentVariableValue(config.ListenPort), "address to listen")
 	profile = flag.Bool("profile", false, "profile")
 )
 

@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/gortc/stun.svg)](https://travis-ci.org/gortc/stund)
-[![Build status](https://ci.appveyor.com/api/projects/status/lcrh42s9j4qygjut?svg=true)](https://ci.appveyor.com/project/ernado/stund)
 
 # stund
 
