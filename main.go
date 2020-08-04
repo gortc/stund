@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	"gortc.io/stun/v2"
+	"gortc.io/stun"
 )
 
 var (
