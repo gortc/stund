@@ -27,3 +27,5 @@ golang.org/x/sys v0.0.0-20191026070338-33540a1f6037 h1:YyJpGZS1sBuBCzLAR1VEpK193
 golang.org/x/sys v0.0.0-20191026070338-33540a1f6037/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 gortc.io/stun v1.22.2 h1:pDsirGr1eAX0qU4UsnI/DGtyOy38cTZgcX5Iamn/kSk=
 gortc.io/stun v1.22.2/go.mod h1:XD5lpONVyjvV3BgOyJFNo0iv6R2oZB4L+weMqxts+zg=
+gortc.io/stun v1.23.0 h1:CpRQFjakCZMwVKTwInKbcCzlBklj62LGzD3NPdFyGrE=
+gortc.io/stun v1.23.0/go.mod h1:XD5lpONVyjvV3BgOyJFNo0iv6R2oZB4L+weMqxts+zg=
